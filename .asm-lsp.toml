@@ -1,0 +1,6 @@
+# asm-lsp needs to know the assembler dialect and target ISA. Without this it
+# defaults to the HOST arch (arm64 on Apple Silicon), so x86-64 GCC output is
+# parsed as ARM and every line is flagged. These files are `gcc -S` output.
+[default_config]
+assembler = "gas"
+instruction_set = "x86-64"
