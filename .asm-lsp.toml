@@ -1,6 +1,13 @@
-# asm-lsp needs to know the assembler dialect and target ISA. Without this it
-# defaults to the HOST arch (arm64 on Apple Silicon), so x86-64 GCC output is
-# parsed as ARM and every line is flagged. These files are `gcc -S` output.
+# asm-lsp docs/hover/goto need the target ISA and assembler dialect. These files
+# are x86-64 `gcc -S` output (AT&T/GAS), not the arm64 host default.
 [default_config]
 assembler = "gas"
 instruction_set = "x86-64"
+
+# Diagnostics come from actually assembling the file. The host `cc` targets
+# arm64, so x86-64 input errors out on every line. Cross-target it at x86-64
+# Linux (clang's integrated assembler handles it) and send the object to
+# /dev/null so no hello.o is left behind.
+[default_config.opts]
+compiler = "cc"
+compile_flags_txt = ["--target=x86_64-linux-gnu", "-c", "-o", "/dev/null"]
