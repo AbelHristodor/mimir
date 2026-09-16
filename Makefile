@@ -9,8 +9,8 @@
 #   make clean     -> remove build/
 
 CC     := cc
-TARGET := hello
-SRCS   := $(wildcard *.c)
+TARGET := main
+SRCS   := $(wildcard src/*.c)
 RUN    := tests/run.sh
 
 # Warnings are on and fatal. -MMD -MP emit .d files so headers trigger rebuilds.

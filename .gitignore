@@ -5,3 +5,4 @@ build/
 *.e
 *.out
 .DS_Store
+.omo/
