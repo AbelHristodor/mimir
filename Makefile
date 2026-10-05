@@ -15,6 +15,7 @@ RUN    := tests/run.sh
 
 # Warnings are on and fatal. -MMD -MP emit .d files so headers trigger rebuilds.
 CFLAGS := -Wall -Wextra -Wpedantic -Werror -MMD -MP
+LDLIBS := -lreadline
 
 # Per-configuration extra flags.
 RELEASE_FLAGS := -O2 -DNDEBUG
@@ -44,7 +45,7 @@ all: release debug asan ubsan tsan
 release: build/release/$(TARGET)
 
 build/release/$(TARGET): $(SRCS) | build/release
-	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(SRCS) -o $@
+	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 build/release:
 	mkdir -p $@
@@ -53,7 +54,7 @@ build/release:
 debug: build/debug/$(TARGET)
 
 build/debug/$(TARGET): $(SRCS) | build/debug
-	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(SRCS) -o $@
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 build/debug:
 	mkdir -p $@
@@ -64,7 +65,7 @@ asan: build/asan/$(TARGET) build/asan/asan_bug
 	@$(RUN) catch build/asan/asan_bug AddressSanitizer
 
 build/asan/$(TARGET): $(SRCS) | build/asan
-	$(CC) $(CFLAGS) $(ASAN_FLAGS) $(SRCS) -o $@
+	$(CC) $(CFLAGS) $(ASAN_FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 build/asan/asan_bug: tests/asan_bug.c | build/asan
 	$(CC) $(CFLAGS) $(ASAN_FLAGS) tests/asan_bug.c -o $@
@@ -78,7 +79,7 @@ ubsan: build/ubsan/$(TARGET) build/ubsan/ubsan_bug
 	@$(RUN) catch build/ubsan/ubsan_bug "runtime error"
 
 build/ubsan/$(TARGET): $(SRCS) | build/ubsan
-	$(CC) $(CFLAGS) $(UBSAN_FLAGS) $(SRCS) -o $@
+	$(CC) $(CFLAGS) $(UBSAN_FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 build/ubsan/ubsan_bug: tests/ubsan_bug.c | build/ubsan
 	$(CC) $(CFLAGS) $(UBSAN_FLAGS) tests/ubsan_bug.c -o $@
@@ -92,7 +93,7 @@ tsan: build/tsan/$(TARGET) build/tsan/tsan_bug
 	@TSAN_OPTIONS=halt_on_error=1 $(RUN) catch build/tsan/tsan_bug ThreadSanitizer
 
 build/tsan/$(TARGET): $(SRCS) | build/tsan
-	$(CC) $(CFLAGS) $(TSAN_FLAGS) $(SRCS) -o $@
+	$(CC) $(CFLAGS) $(TSAN_FLAGS) $(SRCS) -o $@ $(LDLIBS)
 
 build/tsan/tsan_bug: tests/tsan_bug.c | build/tsan
 	$(CC) $(CFLAGS) $(TSAN_FLAGS) tests/tsan_bug.c -o $@

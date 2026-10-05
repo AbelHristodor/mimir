@@ -1,83 +1,59 @@
-#include <errno.h>
+#include <setjmp.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#define MSH_RL_BUFSIZE 1024
+#include "msh.h"
 
-// Defines whether the current session is interactive or not
-static int interactive(void) {
-  return isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
+int last_status = 0;
+
+static sigjmp_buf env;
+static volatile sig_atomic_t jump_active = 0;
+
+static void sigint_handler(int signo) {
+  (void)signo;
+  if (!jump_active)
+    return;
+  siglongjmp(env, 42);
 }
 
-char *read_line(void) {
+int main(void) {
+  // Signal handling
+  struct sigaction s;
+  s.sa_handler = sigint_handler;
+  sigemptyset(&s.sa_mask);
+  s.sa_flags = SA_RESTART;
+  sigaction(SIGINT, &s, NULL);
 
-  int bufsize = MSH_RL_BUFSIZE;
-  // Create buffer for max size input in the shell
-  char *buffer = malloc(sizeof(char) * bufsize);
-  if (!buffer) {
-    fprintf(stderr, "msh: allocation error while reading\n");
-    exit(EXIT_FAILURE);
-  }
+  while (1) {
 
-  if (interactive()) {
-    fputs("msh> ", stderr);
-  }
+    // Handle re-start of the loop when a signal is handled instead of exiting.
+    if (sigsetjmp(env, 1) == 42) {
+      printf("\n");
+      continue;
+    }
+    jump_active = 1;
 
-  // Read one char at a time until end of line or end of input.
-  size_t pos = 0;
-  for (;;) {
-    char c;
-    ssize_t size_read = read(STDIN_FILENO, &c, 1);
-
-    if (size_read == 0) { // No bytes to read, we're good to end
+    // Reading input
+    char *input = read_input();
+    if (input == NULL) { // Ctrl-D
+      printf("\n");
       break;
     }
 
-    if (size_read < 0) {
-      // A signal interrupted the read
-      if (errno == EINTR) {
-        continue;
-      }
-      perror("msh: read");
-      free(buffer);
-      exit(EXIT_FAILURE);
+    // Tokenize the input, i.e. parse it.
+    char **toks = tokenize(input);
+    char **tp = toks;
+
+    last_status = run_list(&tp, 1);
+    if (*tp != NULL) {
+      fprintf(stderr, "msh: syntax error near ')'\n");
+      last_status = 2;
     }
 
-    if (c == '\n') {
-      break;
-    }
-
-    if (pos + 1 >= MSH_RL_BUFSIZE) {
-      fprintf(stderr, "msh: line longer than %d bytes\n", MSH_RL_BUFSIZE - 1);
-      fprintf(stderr, "\t reallocating...");
-
-      bufsize += MSH_RL_BUFSIZE;
-      buffer = realloc(buffer, 2 * MSH_RL_BUFSIZE);
-
-      if (!buffer) {
-        fprintf(stderr, "lsh: allocation error\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    buffer[pos] = c;
-    pos++;
+    free_tokens(toks);
+    free(input);
   }
 
-  buffer[pos] = '\0';
-  return buffer;
-}
-
-int main() {
-
-  char *lines = read_line();
-
-  int c = 0;
-  do {
-    printf("%c", *lines);
-    c++;
-  } while (lines[c] != '\0');
-
-  return EXIT_SUCCESS;
+  return last_status;
 }
