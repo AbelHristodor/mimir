@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "builtins/builtins.h"
 #include "msh.h"
 
 static int is_op(const char *t) {
@@ -18,6 +19,22 @@ static int wait_child(pid_t pid) {
 }
 
 static int run_simple(char **argv) {
+  static const struct {
+    const char *name;
+    int (*fn)(int, char **);
+  } builtins[] = {
+      {"cat", builtin_cat},
+      {"echo", builtin_echo},
+      {"ls", builtin_ls},
+  };
+  for (size_t i = 0; i < sizeof builtins / sizeof *builtins; i++) {
+    if (strcmp(argv[0], builtins[i].name) == 0) {
+      int argc = 0;
+      while (argv[argc])
+        argc++;
+      return builtins[i].fn(argc, argv);
+    }
+  }
   if (strcmp(argv[0], "cd") == 0) {
     if (chdir(argv[1]) < 0) {
       perror(argv[1]);

@@ -10,11 +10,11 @@
 
 CC     := cc
 TARGET := main
-SRCS   := $(wildcard src/*.c)
+SRCS   := $(wildcard src/*.c src/builtins/*.c)
 RUN    := tests/run.sh
 
 # Warnings are on and fatal. -MMD -MP emit .d files so headers trigger rebuilds.
-CFLAGS := -Wall -Wextra -Wpedantic -Werror -MMD -MP
+CFLAGS := -Wall -Wextra -Wpedantic -Werror -MMD -MP -Isrc
 LDLIBS := -lreadline
 
 # Per-configuration extra flags.
