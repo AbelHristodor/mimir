@@ -8,8 +8,6 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "builtins/builtins.h"
-
 // "-rwxr-xr-x" style permission string.
 static void mode_str(mode_t m, char out[11]) {
   out[0] = S_ISDIR(m) ? 'd' : S_ISLNK(m) ? 'l' : '-';

@@ -26,6 +26,7 @@ static int run_simple(char **argv) {
       {"cat", builtin_cat},
       {"echo", builtin_echo},
       {"ls", builtin_ls},
+      {"pwd", builtin_pwd},
   };
   for (size_t i = 0; i < sizeof builtins / sizeof *builtins; i++) {
     if (strcmp(argv[0], builtins[i].name) == 0) {

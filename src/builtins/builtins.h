@@ -6,5 +6,6 @@
 int builtin_cat(int argc, char *argv[]);
 int builtin_echo(int argc, char *argv[]);
 int builtin_ls(int argc, char *argv[]);
+int builtin_pwd(int argc, char *argv[]);
 
 #endif
