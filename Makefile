@@ -107,6 +107,8 @@ build/tsan:
 check: all
 	@$(RUN) ok build/release/$(TARGET)
 	@$(RUN) ok build/debug/$(TARGET)
+	@tests/shell.sh build/debug/$(TARGET)
+	@tests/shell.sh build/asan/$(TARGET)
 	@echo "All checks passed."
 
 # ---- housekeeping -----------------------------------------------------------

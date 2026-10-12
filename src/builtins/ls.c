@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-// "-rwxr-xr-x" style permission string.
+// "-rwxr-xr-x" formatting
 static void mode_str(mode_t m, char out[11]) {
   out[0] = S_ISDIR(m) ? 'd' : S_ISLNK(m) ? 'l' : '-';
   const char *rwx = "rwxrwxrwx";
@@ -31,9 +31,9 @@ int builtin_ls(int argc, char *argv[]) {
   struct stat st;
   while ((dp = readdir(dirp)) != NULL) {
     if (dp->d_name[0] == '.')
-      continue; // hide dotfiles like plain ls
+      continue; // hide dotfiles
 
-    // AT_SYMLINK_NOFOLLOW so a symlink shows as 'l', like ls -l.
+    // AT_SYMLINK_NOFOLLOW so a symlink shows as 'l'
     if (fstatat(dirfd(dirp), dp->d_name, &st, AT_SYMLINK_NOFOLLOW) == -1) {
       perror(dp->d_name);
       return EXIT_FAILURE;

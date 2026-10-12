@@ -1,7 +1,6 @@
 # msh
 
-A small Unix shell in C, built one stage at a time. Uses `readline` for input
-and `fork`/`exec`/`wait` for everything else.
+A small Unix shell in C. For learning purposes.
 
 ## Build
 
@@ -33,6 +32,8 @@ non zero status.
 - Exit status from `wait`, and `!` to negate it
 - Lists: `;`, `&&`, `||`
 - Subshells: `(cd /tmp && pwd); pwd`
+- Pipes: `echo hi | tr a-z A-Z | cat`
+- Redirection: `<`, `>`, `>>`, with an fd prefix like `2> err.log`
 - Line continuation with a trailing `\`, `&&`, or `||`
 - Ctrl-C returns to the prompt
 
@@ -46,20 +47,25 @@ msh> ! true
 msh> echo one \
 > two
 one two
+msh> ! ls /nope 2> /dev/null | wc -l
+       0
 ```
+
+A command with a pipe or a redirect runs in a child, builtins included, so
+`cd /tmp > log` does not change the shell's directory.
 
 ## Not yet
 
-Quoting, variables, redirection, pipes, background jobs.
+Quoting, variables, `2>&1`, heredocs, background jobs.
 
 ## Layout
 
 ```
 src/main.c    SIGINT handling and the read, tokenize, run loop
 src/input.c   read_input: prompt and line continuation
-src/lexer.c   tokenize: words and the operators ( ) ; && ||
-src/exec.c    run_list, run_cmd, run_simple: lists, subshells, !
+src/lexer.c   tokenize: words and the operators ( ) ; && || | < > >>
+src/exec.c    run_list, run_pipeline, parse_cmd: lists, pipes, redirects, subshells, !
 src/util.c    xrealloc
 src/msh.h     shared declarations
-tests/        run.sh and the deliberately buggy sanitizer programs
+tests/        run.sh, shell.sh behaviour tests, the deliberately buggy sanitizer programs
 ```
